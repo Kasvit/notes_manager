@@ -17,6 +17,8 @@ gem 'tzinfo-data', platforms: %i[windows jruby]
 
 gem 'annotate'
 gem 'faker'
+gem 'resque'
+gem 'resque-scheduler'
 
 group :development, :test do
   gem 'debug', platforms: %i[mri windows]

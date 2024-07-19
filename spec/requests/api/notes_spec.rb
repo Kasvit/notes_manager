@@ -128,4 +128,14 @@ RSpec.describe 'Api::NotesController', type: :request do
       end
     end
   end
+
+  describe 'POST /api/notes/import' do
+      it 'generate notes' do
+        expect do
+          post import_api_notes_path
+        end.to change(Note, :count).by(10)
+
+        expect(response.status).to eq(200)
+      end
+  end
 end
