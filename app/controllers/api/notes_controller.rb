@@ -38,6 +38,11 @@ module Api
       @notes = Note.search(params[:query])
     end
 
+    def import
+      Notes::Importer.call
+      head :ok
+    end
+
     private
 
     def note_params

@@ -1,0 +1,4 @@
+note_importer_job:
+  cron: "0 0 * * 1"
+  class: NoteImporterJob
+  description: "Importing notes from the file runs once a week on Monday at midnight"

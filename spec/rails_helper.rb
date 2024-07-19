@@ -28,4 +28,12 @@ RSpec.configure do |config|
   ensure
     DatabaseCleaner.clean
   end
+
+  config.before(:suite) do
+    Resque.inline = true
+  end
+
+  config.after(:suite) do
+    Resque.inline = false
+  end
 end
