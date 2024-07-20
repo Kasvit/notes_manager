@@ -1,4 +1,4 @@
-name: Notes Manager Github CI
+name: Notes Manager CI
 
 on: [push]
 
@@ -8,7 +8,7 @@ jobs:
 
     services:
       mysql:
-        image: mysql:8.0
+        image: mysql:5.7
         ports:
           - 3306:3306
         env:
@@ -30,7 +30,7 @@ jobs:
       MYSQL_DATABASE: notes_manager_test
       MYSQL_ROOT_PASSWORD: password
       MONGODB_URI: mongodb://127.0.0.1:27017/test_db
-      REDIS_URL: redis://127.0.0.1:6379/0
+      REDIS_URL: redis://localhost:6379/0
 
     steps:
       - name: Checkout code
@@ -48,17 +48,16 @@ jobs:
 
       - name: Wait for MySQL to be ready
         run: |
-          until mysqladmin ping -h 127.0.0.1 -u test_user -p'test_password' --silent; do
+          until mysqladmin ping -h 127.0.0.1 -u test_user -p'test_password'; do
             echo 'waiting for mysql to be connectable...'
             sleep 3
           done
 
       - name: Verify MySQL connection
         run: |
-          sudo apt-get install -y mysql-client libmysqlclient-dev
-          mysql --host 127.0.0.1 --port 3306 -u root -ppassword -e "SHOW GRANTS FOR 'root'@'localhost'"
-          mysql -u root -ppassword -e "CREATE DATABASE IF NOT EXISTS notes_manager_test; GRANT ALL PRIVILEGES ON notes_manager_test.* TO 'test_user'@'%' IDENTIFIED BY 'test_password'; FLUSH PRIVILEGES;"
-          mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql --host 127.0.0.1 --port 3306 -u root -ppassword mysql
+          mysql -h 127.0.0.1 -P 3306 -u root -ppassword -e "SHOW DATABASES;"
+          mysql -h 127.0.0.1 -P 3306 -u root -ppassword -e "CREATE DATABASE IF NOT EXISTS notes_manager_test;"
+          mysql -h 127.0.0.1 -P 3306 -u root -ppassword -e "GRANT ALL PRIVILEGES ON notes_manager_test.* TO 'test_user'@'%' IDENTIFIED BY 'test_password'; FLUSH PRIVILEGES;"
 
       - name: Set up MySQL database
         run: |
@@ -68,11 +67,11 @@ jobs:
       - name: Set up MongoDB
         run: |
           sudo apt-get install -y mongodb
-          mongo --eval 'db.createCollection("test")' test_db
+          mongo --eval 'db.createCollection("test_db")' test_db
 
       - name: Run tests
         run: |
           bundle exec rspec
         env:
           MONGODB_URI: mongodb://127.0.0.1:27017/test_db
-          REDIS_URL: redis://127.0.0.1:6379/0
+          REDIS_URL: redis://localhost:6379/0
