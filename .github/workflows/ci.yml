@@ -22,31 +22,13 @@ jobs:
           --health-timeout=5s
           --health-retries=3
 
-      mongodb:
-        image: mongo:6.0
-        ports:
-          - 27017:27017
-        options: >-
-          --health-cmd="mongo --eval 'db.runCommand({ ping: 1 })'"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-
-      redis:
-        image: redis:latest
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd="redis-cli ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-
     env:
       RAILS_ENV: test
       DATABASE_USERNAME: test_user
       DATABASE_PASSWORD: test_password
       DATABASE_HOST: 127.0.0.1
+      MYSQL_DATABASE: notes_manager_test
+      MYSQL_ROOT_PASSWORD: password
       MONGODB_URI: mongodb://127.0.0.1:27017/test_db
       REDIS_URL: redis://127.0.0.1:6379/0
 
@@ -73,28 +55,20 @@ jobs:
 
       - name: Verify MySQL connection
         run: |
+          sudo apt-get install -y mysql-client libmysqlclient-dev
           mysql --host 127.0.0.1 --port 3306 -u root -ppassword -e "SHOW GRANTS FOR 'root'@'localhost'"
           mysql -u root -ppassword -e "CREATE DATABASE IF NOT EXISTS notes_manager_test; GRANT ALL PRIVILEGES ON notes_manager_test.* TO 'test_user'@'%' IDENTIFIED BY 'test_password'; FLUSH PRIVILEGES;"
+          mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql --host 127.0.0.1 --port 3306 -u root -ppassword mysql
 
       - name: Set up MySQL database
         run: |
           bundle exec rails db:create
           bundle exec rails db:schema:load
 
-      - name: Wait for MongoDB to be ready
+      - name: Set up MongoDB
         run: |
-          until mongo --host 127.0.0.1 --port 27017 --eval 'db.runCommand({ ping: 1 })' > /dev/null 2>&1; do
-            echo 'waiting for mongo to be connectable...'
-            sleep 3
-          done
-
-      - name: Set up MongoDB database
-        run: |
-          mongo --host 127.0.0.1 --port 27017 --eval 'db.createCollection("test_collection")' test_db
-
-      - name: Verify Redis connection
-        run: |
-          redis-cli -h 127.0.0.1 -p 6379 ping
+          sudo apt-get install -y mongodb
+          mongo --eval 'db.createCollection("test")' test_db
 
       - name: Run tests
         run: |
