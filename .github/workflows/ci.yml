@@ -23,7 +23,7 @@ jobs:
           --health-retries=3
 
       mongodb:
-        image: mongo:6.0
+        image: mongo:latest
         ports:
           - 27017:27017
         options: >-
@@ -93,6 +93,7 @@ jobs:
 
       - name: Set up MongoDB
         run: |
+          sudo apt-get install -y mongodb
           mongo --eval 'db.createCollection("test_db")' test_db
 
       - name: Run tests
