@@ -23,7 +23,7 @@ jobs:
           --health-retries=3
 
       mongodb:
-        image: mongo:latest
+        image: mongo:6.0
         ports:
           - 27017:27017
         options: >-
@@ -69,6 +69,13 @@ jobs:
       - name: Install Redis tools
         run: sudo apt-get install -y redis-tools
 
+      - name: Install mongosh
+        run: sudo apt-get install -y gnupg && \
+          wget -qO - https://pgp.mongodb.com/server-6.0.asc | sudo apt-key add - && \
+          echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu focal 10gen" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list && \
+          sudo apt-get update && \
+          sudo apt-get install -y mongodb-mongosh
+
       - name: Wait for MySQL to be ready
         run: |
           until mysqladmin ping -h 127.0.0.1 -u test_user -p'test_password'; do
@@ -92,7 +99,7 @@ jobs:
       - name: Set up MongoDB
         run: |
           echo "Creating test database in MongoDB"
-          mongo --eval 'db.getSiblingDB("test_db").createCollection("test")' --quiet
+          mongosh --eval 'db.getSiblingDB("test_db").createCollection("test")'
 
       - name: Set up MySQL database
         run: |
