@@ -56,6 +56,9 @@ jobs:
           gem install bundler
           bundle install --jobs 4 --retry 3
 
+      - name: Install Redis tools
+        run: sudo apt-get install -y redis-tools
+
       - name: Wait for MySQL to be ready
         run: |
           until mysqladmin ping -h 127.0.0.1 -u test_user -p'test_password'; do
@@ -76,15 +79,15 @@ jobs:
             sleep 3
           done
 
-      - name: Set up MySQL database
-        run: |
-          bundle exec rails db:create
-          bundle exec rails db:schema:load
-
       - name: Set up MongoDB
         run: |
           sudo apt-get install -y mongodb
           mongo --eval 'db.createCollection("test_db")' test_db
+
+      - name: Set up MySQL database
+        run: |
+          bundle exec rails db:create
+          bundle exec rails db:schema:load
 
       - name: Run tests
         run: |
