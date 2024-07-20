@@ -1,15 +1,9 @@
 name: Notes Manager Github CI
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+on: [push]
 
 jobs:
-  setup:
+  build:
     runs-on: ubuntu-latest
 
     services:
