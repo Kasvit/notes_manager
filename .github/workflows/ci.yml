@@ -59,14 +59,16 @@ jobs:
       - name: Install Redis tools
         run: sudo apt-get install -y redis-tools
 
-      - name: Install wget
-        run: sudo apt-get install -y wget
+      - name: Install wget and gnupg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget gnupg
 
       - name: Install mongosh
-        run: sudo apt-get install -y gnupg && \
-          wget -qO - https://pgp.mongodb.com/server-6.0.asc | sudo apt-key add - && \
-          echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu focal 10gen" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list && \
-          sudo apt-get update && \
+        run: |
+          wget -qO - https://pgp.mongodb.com/server-6.0.asc | gpg --dearmor -o /usr/share/keyrings/mongodb-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/mongodb-archive-keyring.gpg] https://repo.mongodb.org/apt/ubuntu focal mongodb-org/6.0 main" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+          sudo apt-get update
           sudo apt-get install -y mongodb-mongosh
 
       - name: Wait for MySQL to be ready
