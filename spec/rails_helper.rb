@@ -24,9 +24,31 @@ RSpec.configure do |config|
   config.include FactoryBot::Syntax::Methods
 
   config.before(:suite) do
-    DatabaseCleaner.start
-  ensure
-    DatabaseCleaner.clean
+    DatabaseCleaner[:active_record].strategy = :transaction
+    DatabaseCleaner[:mongoid].strategy = :deletion
+
+    DatabaseCleaner[:active_record].clean_with(:truncation)
+    DatabaseCleaner[:mongoid].clean_with(:deletion)
+  end
+
+  config.before(:each) do |example|
+    if example.metadata[:type] == :model
+      DatabaseCleaner[:active_record].start
+      DatabaseCleaner[:mongoid].start
+    end
+  end
+
+  config.after(:each) do |example|
+    if example.metadata[:type] == :model
+      DatabaseCleaner[:active_record].clean
+      DatabaseCleaner[:mongoid].clean
+    end
+  end
+
+  config.around(:each) do |example|
+    DatabaseCleaner.cleaning do
+      example.run
+    end
   end
 
   config.before(:suite) do

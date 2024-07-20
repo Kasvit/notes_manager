@@ -9,6 +9,8 @@ module ApiResponseErrorHandler
 
   def not_found(exception)
     error_response({ title: 'Not Found', detail: exception.message }, :not_found)
+  ensure
+    log_action
   end
 
   def validation_error(active_record_model)

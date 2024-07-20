@@ -17,6 +17,7 @@ gem 'tzinfo-data', platforms: %i[windows jruby]
 
 gem 'annotate'
 gem 'faker'
+gem 'mongoid'
 gem 'resque'
 gem 'resque-scheduler'
 
@@ -37,5 +38,7 @@ end
 
 group :test do
   gem 'database_cleaner'
+  gem 'database_cleaner-active_record'
+  gem 'database_cleaner-mongoid'
   gem 'simplecov', require: false
 end

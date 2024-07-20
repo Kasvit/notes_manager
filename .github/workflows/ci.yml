@@ -1,0 +1,73 @@
+name: Notes Manager Github CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:5.7
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: test_db
+          MYSQL_USER: test_user
+          MYSQL_PASSWORD: test_password
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+
+    env:
+      RAILS_ENV: test
+      DATABASE_USERNAME: test_user
+      DATABASE_PASSWORD: test_password
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_DATABASE: test_db
+      MYSQL_ROOT_PASSWORD: password
+      MONGODB_URI: mongodb://127.0.0.1:27017/test_db
+      REDIS_URL: redis://localhost:6379/0
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.0
+
+      - name: Install dependencies
+        run: |
+          gem install bundler
+          bundle install --jobs 4 --retry 3
+
+      - name: Set up MySQL
+        run: |
+          sudo apt-get install -y libmysqlclient-dev
+          bundle exec rails db:create
+          bundle exec rails db:schema:load
+
+      - name: Set up MongoDB
+        run: |
+          sudo apt-get install -y mongodb
+          mongo --eval 'db.createCollection("test")' test_db
+
+      - name: Run tests
+        run: |
+          bundle exec rspec
+        env:
+          MONGODB_URI: mongodb://127.0.0.1:27017/test_db
+          REDIS_URL: redis://localhost:6379/0

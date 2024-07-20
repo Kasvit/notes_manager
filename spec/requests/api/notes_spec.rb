@@ -8,6 +8,7 @@ RSpec.describe 'Api::NotesController', type: :request do
       get api_notes_path
       expect(response.status).to eq(200)
       expect(JSON.parse(response.body, symbolize_names: true)).to eq(data: [])
+      expect(ApiLog.count).to eq(1)
     end
   end
 
@@ -30,6 +31,7 @@ RSpec.describe 'Api::NotesController', type: :request do
       get api_note_path(note)
       expect(response.status).to eq(200)
       expect(JSON.parse(response.body, symbolize_names: true)).to eq(expected_response)
+      expect(ApiLog.count).to eq(1)
     end
 
     it 'returns error with invalid id' do
@@ -37,6 +39,7 @@ RSpec.describe 'Api::NotesController', type: :request do
       expect(JSON.parse(response.body,
                         symbolize_names: true)).to eq({ errors: [{ title: 'Not Found',
                                                                    detail: "Couldn't find Note with 'id'=111" }] })
+      expect(ApiLog.count).to eq(1)
     end
   end
 
@@ -46,6 +49,7 @@ RSpec.describe 'Api::NotesController', type: :request do
         post api_notes_path, params: { note: { title: 'new title', content: 'content' } }
         note = Note.last
         expect(JSON.parse(response.body, symbolize_names: true)[:data][:id]).to eq(note.id)
+        expect(ApiLog.count).to eq(1)
       end
     end
 
@@ -55,6 +59,7 @@ RSpec.describe 'Api::NotesController', type: :request do
         expect(JSON.parse(response.body,
                           symbolize_names: true)).to eq({ errors: [{ detail: "Content can't be blank",
                                                                      title: 'Note validation error' }] })
+        expect(ApiLog.count).to eq(1)
       end
     end
   end
@@ -81,6 +86,7 @@ RSpec.describe 'Api::NotesController', type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(JSON.parse(response.body, symbolize_names: true)).to eq(expected_response)
+        expect(ApiLog.count).to eq(1)
       end
     end
 
@@ -91,6 +97,7 @@ RSpec.describe 'Api::NotesController', type: :request do
 
         response_data = JSON.parse(response.body, symbolize_names: true)
         expect(response_data).to eq({ errors: [{ detail: "Title can't be blank", title: 'Note validation error' }] })
+        expect(ApiLog.count).to eq(1)
       end
     end
   end
@@ -106,6 +113,7 @@ RSpec.describe 'Api::NotesController', type: :request do
       end.to change(Note, :count).by(-1)
 
       expect(response).to have_http_status(:no_content)
+      expect(ApiLog.count).to eq(1)
     end
   end
 
@@ -118,24 +126,27 @@ RSpec.describe 'Api::NotesController', type: :request do
       it 'returns a note' do
         get search_api_notes_path, params: { query: 'test' }
         expect(JSON.parse(response.body, symbolize_names: true)[:data].size).to eq(1)
+        expect(ApiLog.count).to eq(1)
       end
     end
 
     context "when didn't find a note" do
-      it 'returns a note' do
+      it 'returns a blank array' do
         get search_api_notes_path, params: { query: 'John' }
         expect(JSON.parse(response.body, symbolize_names: true)[:data].size).to eq(0)
+        expect(ApiLog.count).to eq(1)
       end
     end
   end
 
   describe 'POST /api/notes/import' do
-      it 'generate notes' do
-        expect do
-          post import_api_notes_path
-        end.to change(Note, :count).by(10)
+    it 'generate notes' do
+      expect do
+        post import_api_notes_path
+      end.to change(Note, :count).by(10)
 
-        expect(response.status).to eq(200)
-      end
+      expect(response.status).to eq(200)
+      expect(ApiLog.count).to eq(1)
+    end
   end
 end

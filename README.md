@@ -14,4 +14,13 @@ rails db:setup
 rails s
 ```
 
-Also, you can send a POST request to `/api/notes/import` and generate mocked notes. 
+### Useful Endpoints
+```
+Notes resources: http://localhost:3000/api/notes
+Notes search: http://localhost:3000/api/notes/search?query=Rosenbaum
+Generate notes from the mocked file: POST http://localhost:3000/api/notes/import
+
+API logs list: http://localhost:3000/api/api_logs
+API logs search: http://localhost:3000/api/api_logs/search?endpoint=/api/notes&request_method=GET&response_status=200
+
+```
