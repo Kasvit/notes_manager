@@ -1,6 +1,6 @@
 name: Notes Manager Github CI
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   build:
@@ -53,10 +53,15 @@ jobs:
             sleep 3
           done
 
+      - name: Verify MySQL connection from host
+        run: |
+          sudo apt-get install -y mysql-client libmysqlclient-dev
+          mysql --host 127.0.0.1 --port 3306 -u root -ppassword -e "SHOW GRANTS FOR 'root'@'localhost'"
+          mysql -u root -ppassword -e "CREATE DATABASE IF NOT EXISTS notes_manager_test; GRANT ALL PRIVILEGES ON notes_manager_test.* TO 'test_user'@'%' IDENTIFIED BY 'test_password'; FLUSH PRIVILEGES;"
+          mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql --host 127.0.0.1 --port 3306 -u root -ppassword mysql
+
       - name: Set up MySQL
         run: |
-          sudo apt-get install -y libmysqlclient-dev
-          mysql -u root -ppassword -e "CREATE DATABASE IF NOT EXISTS notes_manager_test; GRANT ALL PRIVILEGES ON notes_manager_test.* TO 'test_user'@'%' IDENTIFIED BY 'test_password'; FLUSH PRIVILEGES;"
           bundle exec rails db:create
           bundle exec rails db:schema:load
 
