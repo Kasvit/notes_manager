@@ -64,6 +64,7 @@ jobs:
       - name: Set up MySQL
         run: |
           sudo apt-get install -y libmysqlclient-dev
+          mysql -u root -ppassword -e "CREATE DATABASE IF NOT EXISTS notes_manager_test; GRANT ALL PRIVILEGES ON notes_manager_test.* TO 'test_user'@'%' IDENTIFIED BY 'test_password'; FLUSH PRIVILEGES;"
           bundle exec rails db:create
           bundle exec rails db:schema:load
 
