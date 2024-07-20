@@ -1,0 +1,102 @@
+name: Notes Manager CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:5.7
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: notes_manager_test
+          MYSQL_USER: test_user
+          MYSQL_PASSWORD: test_password
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+      mongodb:
+        image: mongo:4.4
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd="mongo --eval 'db.runCommand({ ping: 1 })' --quiet"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    env:
+      RAILS_ENV: test
+      DATABASE_USERNAME: test_user
+      DATABASE_PASSWORD: test_password
+      DATABASE_HOST: 127.0.0.1
+      MYSQL_DATABASE: notes_manager_test
+      MYSQL_ROOT_PASSWORD: password
+      MONGODB_URI: mongodb://127.0.0.1:27017/test_db
+      REDIS_URL: redis://127.0.0.1:6379/0
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.2.2
+
+      - name: Install dependencies
+        run: |
+          gem install bundler
+          bundle install --jobs 4 --retry 3
+
+      - name: Install Redis tools
+        run: sudo apt-get install -y redis-tools
+
+      - name: Wait for MySQL to be ready
+        run: |
+          until mysqladmin ping -h 127.0.0.1 -u test_user -p'test_password'; do
+            echo 'waiting for mysql to be connectable...'
+            sleep 3
+          done
+
+      - name: Verify MySQL connection
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u root -ppassword -e "SHOW DATABASES;"
+          mysql -h 127.0.0.1 -P 3306 -u root -ppassword -e "CREATE DATABASE IF NOT EXISTS notes_manager_test;"
+          mysql -h 127.0.0.1 -P 3306 -u root -ppassword -e "GRANT ALL PRIVILEGES ON notes_manager_test.* TO 'test_user'@'%' IDENTIFIED BY 'test_password'; FLUSH PRIVILEGES;"
+
+      - name: Wait for Redis to be ready
+        run: |
+          until redis-cli -h 127.0.0.1 -p 6379 ping; do
+            echo 'waiting for redis to be ready...'
+            sleep 3
+          done
+
+      - name: Set up MySQL database
+        run: |
+          bundle exec rails db:create
+          bundle exec rails db:schema:load
+
+      - name: Run tests
+        run: |
+          bundle exec rspec
+        env:
+          MONGODB_URI: mongodb://127.0.0.1:27017/test_db
+          REDIS_URL: redis://127.0.0.1:6379/0

@@ -1,9 +1,10 @@
 # frozen_string_literal: true
+
 require 'resque/server'
 require 'resque/scheduler/server'
 
 Rails.application.routes.draw do
-  mount Resque::Server.new, at: "/resque"
+  mount Resque::Server.new, at: '/resque'
 
   root 'home#welcome'
 
@@ -14,6 +15,10 @@ Rails.application.routes.draw do
           get :search
           post :import
         end
+      end
+
+      resources :api_logs, only: [:index] do
+        get :search, on: :collection
       end
     end
   end
