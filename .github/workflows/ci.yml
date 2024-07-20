@@ -34,7 +34,7 @@ jobs:
       RAILS_ENV: test
       DATABASE_USERNAME: test_user
       DATABASE_PASSWORD: test_password
-      MYSQL_HOST: 127.0.0.1
+      DATABASE_HOST: 127.0.0.1
       MYSQL_DATABASE: test_db
       MYSQL_ROOT_PASSWORD: password
       MONGODB_URI: mongodb://127.0.0.1:27017/test_db
