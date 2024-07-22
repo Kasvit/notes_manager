@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /bin/sh /app/entrypoints/docker-entrypoint.sh
+    volumes:
+      - ".:/app"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - redis
+      - mongo
+    environment:
+      DATABASE_USERNAME: test_user
+      DATABASE_PASSWORD: test_password
+      DATABASE_HOST: db
+      DATABASE_NAME: notes_manager_development
+      REDIS_URL: redis://redis:6379
+      MONGODB_URI: mongodb://mongo:27017/db
+
+  db:
+    image: mysql:5.7
+    container_name: mysql
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: notes_manager_development
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: test_password
+    ports:
+      - "3306:3306"
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  node_client:
+    build:
+      context: .
+      dockerfile: node_client/Dockerfile
+    ports:
+      - "3001:3001"
+    depends_on:
+      - web
+
+volumes:
+  db_data:
+  mongo_data:

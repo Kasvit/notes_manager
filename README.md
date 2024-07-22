@@ -24,3 +24,9 @@ API logs list: http://localhost:3000/api/api_logs
 API logs search: http://localhost:3000/api/api_logs/search?endpoint=/api/notes&request_method=GET&response_status=200
 
 ```
+
+### Docker
+
+```
+docker-compose up
+```
